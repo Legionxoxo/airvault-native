@@ -4,7 +4,7 @@
     "slug": "airvault-native",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/logo.svg",
+    "icon": "./assets/images/highlight.png",
     "scheme": "airvaultnative",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,10 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon/logo.svg",
+        "foregroundImage": "./assets/images/highlight.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.airvaultnative"
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +29,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/highlight.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"

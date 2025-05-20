@@ -1,4 +1,3 @@
-import Collection from '@/assets/icons/collection.svg'
 import {
     Roboto_400Regular,
     Roboto_500Medium,
@@ -8,6 +7,7 @@ import {
 } from '@expo-google-fonts/roboto'
 import React from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
+import GalleryScreen from '../components/Gallery'
 
 const Index = () => {
     const [fontsLoaded] = useFonts({
@@ -27,12 +27,8 @@ const Index = () => {
     }
 
     return (
-        <View className="flex-1 justify-center items-center">
-            <Text className="text-lg font-roboto">Roboto 400</Text>
-            <Text style={{ fontFamily: 'Roboto_500Medium' }} className="text-lg">Roboto 500</Text>
-            <Text style={{ fontFamily: 'Roboto_600SemiBold' }} className="text-lg">Roboto 600</Text>
-            <Text style={{ fontFamily: 'Roboto_700Bold' }} className="text-lg">Roboto 700</Text>
-            <Collection />
+        <View className="flex-1 bg-black ">
+            <GalleryScreen />
         </View>
     )
 }

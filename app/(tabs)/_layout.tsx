@@ -1,7 +1,7 @@
 import Backarrow from '@/assets/icons/backarrow.svg';
 import Chatbot from '@/assets/icons/chatbot.svg';
 import Collection from '@/assets/icons/collection.svg';
-import Logo from "@/assets/icons/logo.svg";
+import Logo from '@/assets/icons/logo.svg';
 import Photo from "@/assets/icons/photo.svg";
 import Plus from '@/assets/icons/plus.svg';
 import Profile from '@/assets/icons/profile.svg';
@@ -79,13 +79,13 @@ const _layout = () => {
                     headerShown: true,
                     header: () => (
                         <CustomHeader
-                            leftIcon={<Logo />}
+                            /*     leftIcon={<Logo />} */
                             rightIcon={
                                 <TouchableOpacity onPress={() => router.push('/(tabs)/chatbot')}>
                                     <Chatbot />
                                 </TouchableOpacity>
                             }
-                            centerContent={<Text className="text-lg font-medium text-black text-center"></Text>}
+                            centerContent={<Logo />}
                         />
                     ),
                     tabBarIcon: ({ focused }) => (

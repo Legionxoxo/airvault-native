@@ -9,17 +9,23 @@ module.exports = {
         extend: {
             colors: {
                 primary: "#030014",
-                secondary: "#151312",
+                secondary: "#2678FF",
                 light: {
-                    100: "#D6C7FF",
+                    100: "#6B7280",
                     200: "#A8B5DB",
                     300: "#9CA4AB",
                 },
                 dark: {
-                    100: "#221F3D",
+                    100: "#000000",
                     200: "#0F0D23",
                 },
                 accent: "#AB8BFF",
+            },
+            fontFamily: {
+                roboto: ["Roboto_400Regular"],
+                "roboto-500": ["Roboto_500Medium"],
+                "roboto-600": ["Roboto_600SemiBold"],
+                "roboto-700": ["Roboto_700Bold"],
             },
         },
     },

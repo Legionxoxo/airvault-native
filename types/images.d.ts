@@ -3,10 +3,8 @@ declare module "*.png" {
     export default content;
 }
 
-// For SVG (used as React components)
 declare module "*.svg" {
-    import * as React from "react";
-    import { SvgProps } from "react-native-svg";
-    const content: React.FC<SvgProps>;
+    import React from "react";
+    const content: React.FC<React.SVGProps<SVGSVGElement>>;
     export default content;
 }

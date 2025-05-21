@@ -16,9 +16,10 @@ import {
 interface FloatingActionButtonProps {
     onUploadSuccess?: () => void;
     onSelectModeToggle?: () => void;
+    onCreateAlbum?: () => void;
 }
 
-const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle }: FloatingActionButtonProps) => {
+const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle, onCreateAlbum }: FloatingActionButtonProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
 
@@ -85,8 +86,7 @@ const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle }: FloatingA
     };
 
     const handleCreateAlbum = () => {
-        console.log('Create Album clicked');
-        Alert.alert('Create Album', 'Album creation functionality will be implemented here');
+        if (onCreateAlbum) onCreateAlbum();
         setIsOpen(false);
     };
 

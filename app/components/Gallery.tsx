@@ -2,6 +2,7 @@ import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 import { PhotoGroup } from '@/types/photoGroup';
 import { groupPhotosByMonth } from '@/utils/groupPhotosByMonth';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMemo, useState } from 'react';
 import {
     ActivityIndicator,
@@ -9,13 +10,17 @@ import {
     Image,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
+import CreateAlbumModal from './CreateAlbumModal';
 import FloatingActionButton from './FloatingButon';
 
 export default function GalleryScreen() {
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+    const [showAlbumModal, setShowAlbumModal] = useState(false);
+    const [albumName, setAlbumName] = useState('');
+    const [creatingAlbum, setCreatingAlbum] = useState(false);
 
     const {
         permissionStatus,
@@ -50,6 +55,39 @@ export default function GalleryScreen() {
     const clearSelection = () => {
         setSelectedPhotos([]);
         setIsSelecting(false);
+    };
+
+    // Helper: Save album to AsyncStorage
+    const saveAlbum = async (name: string, photoIds: string[]) => {
+        try {
+            const albumsRaw = await AsyncStorage.getItem('albums');
+            const albums = albumsRaw ? JSON.parse(albumsRaw) : [];
+            const newAlbum = {
+                id: Date.now().toString(),
+                name,
+                photoIds,
+            };
+            await AsyncStorage.setItem('albums', JSON.stringify([...albums, newAlbum]));
+        } catch (e) {
+            console.error('Failed to save album', e);
+        }
+    };
+
+    // Show modal when 'Create Album' is clicked
+    const createAlbum = () => {
+        setShowAlbumModal(true);
+    };
+
+    // Handle album creation in modal
+    const handleCreateAlbum = async () => {
+        if (!albumName.trim() || selectedPhotos.length === 0) return;
+        setCreatingAlbum(true);
+        await saveAlbum(albumName.trim(), selectedPhotos);
+        setCreatingAlbum(false);
+        setShowAlbumModal(false);
+        setAlbumName('');
+        clearSelection();
+        // TODO: Optionally navigate to Collection screen
     };
 
     const renderMonthSection = ({ item }: { item: PhotoGroup }) => {
@@ -132,11 +170,26 @@ export default function GalleryScreen() {
 
     return (
         <View className="flex-1 bg-gray-50">
+            {/* Album Creation Modal */}
+            <CreateAlbumModal
+                visible={showAlbumModal}
+                onClose={() => setShowAlbumModal(false)}
+                onCreate={handleCreateAlbum}
+                albumName={albumName}
+                setAlbumName={setAlbumName}
+                selectedPhotos={selectedPhotos}
+                photos={photos}
+                togglePhotoSelection={togglePhotoSelection}
+                creatingAlbum={creatingAlbum}
+            />
             {isSelecting && (
                 <View className="p-2 bg-white border-b border-gray-200 flex-row justify-between items-center">
                     <Text className="text-base font-semibold">Selected: {selectedPhotos.length}</Text>
                     <TouchableOpacity onPress={clearSelection} className="bg-red-500 px-4 py-1.5 rounded">
                         <Text className="text-white">Clear Selection</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={createAlbum} className="bg-primary px-4 py-1.5 rounded">
+                        <Text className="text-white">Create Album</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -168,6 +221,9 @@ export default function GalleryScreen() {
             <FloatingActionButton
                 onUploadSuccess={requestPermissionAndLoadPhotos}
                 onSelectModeToggle={() => setIsSelecting((prev) => !prev)}
+                onCreateAlbum={() => {
+                    setIsSelecting(true);
+                }}
             />
         </View>
     );

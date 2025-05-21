@@ -79,9 +79,8 @@ const _layout = () => {
                     headerShown: true,
                     header: () => (
                         <CustomHeader
-                            /*     leftIcon={<Logo />} */
                             rightIcon={
-                                <TouchableOpacity onPress={() => router.push('/(tabs)/chatbot')}>
+                                <TouchableOpacity onPress={() => router.push('/(tabs)/(modals)/chatbot')}>
                                     <Chatbot />
                                 </TouchableOpacity>
                             }

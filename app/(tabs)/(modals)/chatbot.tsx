@@ -1,3 +1,4 @@
+
 const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
@@ -15,7 +16,7 @@ const styles = StyleSheet.create({
 import Backarrow from '@/assets/icons/backarrow.svg';
 import { FontAwesome } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     FlatList,
     Image,
@@ -28,6 +29,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+
 
 export default function Chatbot() {
     const router = useRouter();
@@ -126,7 +128,6 @@ export default function Chatbot() {
                     ),
                 }}
             />
-
             <View className='bg-gray-50 flex-1'>
                 <ScrollView
                     ref={scrollViewRef}
@@ -214,5 +215,9 @@ export default function Chatbot() {
                 </View>
             </View>
         </>
+
+
+
+
     );
 }

@@ -1,3 +1,5 @@
+import Mycloud from '@/assets/icons/mycloud.svg';
+import { AntDesign, FontAwesome, Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
@@ -33,7 +35,7 @@ const Profile = () => {
                 <Text className="text-sm text-light-100 font-medium mb-3">Connected Device</Text>
                 <View className="flex-row items-center p-4 bg-white rounded-xl">
                     <View className="w-10 h-10 rounded-full bg-[#F3F4F6] justify-center items-center mr-3">
-                        <View className="w-6 h-6 bg-gray-400 rounded-full" />
+                        <Mycloud fill='#6B7280' />
                     </View>
                     <View className="flex-1">
                         <Text className="text-base font-medium font-roboto text-dark-100">MyCloud Home</Text>
@@ -49,48 +51,48 @@ const Profile = () => {
                 {/* Settings Items */}
                 <View className='font-roboto bg-white rounded-[24px]'>
                     <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-200">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full  justify-center items-center mr-3">
+                            <MaterialCommunityIcons name="account-cog-outline" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Account Settings</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-200">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full justify-center items-center mr-3">
+                            <Ionicons name="sync" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Backup & Sync</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-200">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full justify-center items-center mr-3">
+                            <Ionicons name="color-palette-outline" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Appearance</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-200">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full  justify-center items-center mr-3">
+                            <MaterialIcons name="notifications-none" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Notifications</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity className="flex-row items-center p-4 border-b border-gray-200">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full  justify-center items-center mr-3">
+                            <AntDesign name="lock" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Privacy & Security</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity className="flex-row items-center p-4 ">
-                        <View className="w-8 h-8 rounded-full bg-gray-100 justify-center items-center mr-3">
-                            <View className="w-4 h-4 bg-gray-400 rounded" />
+                        <View className="w-8 h-8 rounded-full  justify-center items-center mr-3">
+                            <FontAwesome name="question-circle-o" size={24} color="#6B7280" />
                         </View>
                         <Text className="flex-1 text-base">Help & Support</Text>
                         <Text className="text-xl text-gray-400 pr-2">›</Text>

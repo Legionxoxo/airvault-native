@@ -128,8 +128,8 @@ const _layout = () => {
                                     <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
                                     <TextInput
                                         placeholder="Search photos..."
-                                        placeholderTextColor="#9CA3AF"
-                                        className="flex-1 text-base text-gray-900"
+                                        placeholderTextColor="#6B7280"
+                                        className="flex-1 bg-gray-100 rounded-lg py-3 text-sm text-dark-100 font-roboto"
                                     />
                                     <Ionicons name="mic-outline" size={18} color="#9CA3AF" style={{ marginLeft: 8 }} />
                                 </View>

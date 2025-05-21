@@ -15,9 +15,10 @@ import {
 
 interface FloatingActionButtonProps {
     onUploadSuccess?: () => void;
+    onSelectModeToggle?: () => void;
 }
 
-const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) => {
+const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle }: FloatingActionButtonProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
 
@@ -90,8 +91,7 @@ const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) =>
     };
 
     const handleSelectPhotos = () => {
-        console.log('Select Photos clicked');
-        Alert.alert('Select Photos', 'Photo selection functionality will be implemented here');
+        if (onSelectModeToggle) onSelectModeToggle();
         setIsOpen(false);
     };
 
@@ -109,14 +109,8 @@ const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) =>
                         }}
                     >
                         <View className="mb-2 flex-row items-center">
-                            <View className="bg-white  rounded-2xl px-4 py-3 mr-3 w-[110px]">
-                                <Text
-                                    className="font-medium text-nowrap overflow-hidden text-sm text-center"
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                >
-                                    Upload Photos
-                                </Text>
+                            <View className="bg-white rounded-2xl px-4 py-3 mr-3 w-[110px]">
+                                <Text className="font-medium text-sm text-center">Upload Photos</Text>
                             </View>
                             <TouchableOpacity
                                 className="bg-white size-[48px] rounded-full justify-center items-center shadow-lg"
@@ -128,13 +122,7 @@ const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) =>
 
                         <View className="mb-2 flex-row items-center">
                             <View className="bg-white rounded-2xl px-4 py-3 mr-3 w-[110px]">
-                                <Text
-                                    className="font-medium text-nowrap overflow-hidden text-sm text-center"
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                >
-                                    Create Album
-                                </Text>
+                                <Text className="font-medium text-sm text-center">Create Album</Text>
                             </View>
                             <TouchableOpacity
                                 className="bg-white size-[48px] rounded-full justify-center items-center shadow-lg"
@@ -145,14 +133,8 @@ const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) =>
                         </View>
 
                         <View className="mb-2 flex-row items-center">
-                            <View className="bg-white  rounded-2xl px-4 py-3 mr-3 w-[110px]">
-                                <Text
-                                    className="font-medium text-nowrap overflow-hidden text-sm text-center"
-                                    numberOfLines={1}
-                                    ellipsizeMode="tail"
-                                >
-                                    Select Photos
-                                </Text>
+                            <View className="bg-white rounded-2xl px-4 py-3 mr-3 w-[110px]">
+                                <Text className="font-medium text-sm text-center">Select Photos</Text>
                             </View>
                             <TouchableOpacity
                                 className="bg-white size-[48px] rounded-full justify-center items-center shadow-lg"
@@ -167,7 +149,6 @@ const FloatingActionButton = ({ onUploadSuccess }: FloatingActionButtonProps) =>
                         </View>
                     </Animated.View>
                 </View>
-
             )}
 
             <TouchableOpacity

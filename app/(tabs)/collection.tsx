@@ -1,11 +1,11 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text } from 'react-native'
 
 const Collection = () => {
     return (
-        <View>
+        <ScrollView className='bg-gray-50'>
             <Text>Collection</Text>
-        </View>
+        </ScrollView>
     )
 }
 

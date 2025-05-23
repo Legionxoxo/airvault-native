@@ -1,3 +1,4 @@
+import { useGalleryMonitor } from '@/hooks/useGalleryMonitor';
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 import { PhotoGroup } from '@/types/photoGroup';
 import { groupPhotosByMonth } from '@/utils/groupPhotosByMonth';
@@ -29,6 +30,12 @@ export default function GalleryScreen() {
         requestPermissionAndLoadPhotos,
         loadMorePhotos,
     } = useMediaLibrary();
+
+    // Add gallery monitoring
+    const { isMonitoring, error: monitoringError } = useGalleryMonitor((newPhotos) => {
+        // Refresh the gallery when new photos are detected
+        requestPermissionAndLoadPhotos();
+    });
 
     const photosByMonth = useMemo(() => groupPhotosByMonth(photos), [photos]);
 

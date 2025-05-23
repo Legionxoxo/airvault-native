@@ -5,6 +5,7 @@ import {
     Roboto_700Bold,
     useFonts
 } from '@expo-google-fonts/roboto'
+import { useRouter } from 'expo-router'
 import React from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
 import GalleryScreen from '../components/Gallery'
@@ -16,6 +17,7 @@ const Index = () => {
         Roboto_600SemiBold,
         Roboto_700Bold,
     })
+    const router = useRouter()
 
     if (!fontsLoaded) {
         return (
@@ -27,7 +29,7 @@ const Index = () => {
     }
 
     return (
-        <View className="flex-1 bg-black ">
+        <View className="flex-1 bg-black">
             <GalleryScreen />
         </View>
     )

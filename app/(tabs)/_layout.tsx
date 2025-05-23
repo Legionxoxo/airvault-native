@@ -1,15 +1,10 @@
-import Backarrow from '@/assets/icons/backarrow.svg';
-import Chatbot from '@/assets/icons/chatbot.svg';
 import Collection from '@/assets/icons/collection.svg';
-import Logo from '@/assets/icons/logo.svg';
 import Photo from "@/assets/icons/photo.svg";
-import Plus from '@/assets/icons/plus.svg';
 import Profile from '@/assets/icons/profile.svg';
 import Search from '@/assets/icons/search.svg';
-import { Ionicons } from '@expo/vector-icons';
 import { Tabs, useRouter } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CustomHeader = ({ leftIcon, rightIcon, centerContent }: {
@@ -76,17 +71,7 @@ const _layout = () => {
                 name="index"
                 options={{
                     title: 'Photos',
-                    headerShown: true,
-                    header: () => (
-                        <CustomHeader
-                            rightIcon={
-                                <TouchableOpacity onPress={() => router.push('/(tabs)/(modals)/chatbot')}>
-                                    <Chatbot />
-                                </TouchableOpacity>
-                            }
-                            centerContent={<Logo />}
-                        />
-                    ),
+                    headerShown: false,
                     tabBarIcon: ({ focused }) => (
                         <Photo width={24} height={24} fill={focused ? '#2678FF' : '#6B7280'} />
                     ),
@@ -97,17 +82,7 @@ const _layout = () => {
                 name="collection"
                 options={{
                     title: 'Collections',
-                    headerShown: true,
-                    header: () => (
-                        <CustomHeader
-                            centerContent={<Text className="text-[20px] font-medium text-dark-100">Collections</Text>}
-                            rightIcon={
-                                <TouchableOpacity onPress={() => console.log('Add Collection')}>
-                                    <Plus />
-                                </TouchableOpacity>
-                            }
-                        />
-                    ),
+                    headerShown: false,
                     tabBarIcon: ({ focused }) => (
                         <Collection width={24} height={24} fill={focused ? '#2678FF' : '#6B7280'} />
                     ),
@@ -118,23 +93,7 @@ const _layout = () => {
                 name="search"
                 options={{
                     title: 'Search',
-                    headerShown: true,
-                    header: () => (
-                        <CustomHeader
-                            leftIcon={<Backarrow />}
-                            centerContent={
-                                <View className="flex-row items-center bg-gray-100 rounded-xl px-3 h-10">
-                                    <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
-                                    <TextInput
-                                        placeholder="Search photos..."
-                                        placeholderTextColor="#6B7280"
-                                        className="flex-1 bg-gray-100 rounded-lg py-3 text-sm text-dark-100 font-roboto"
-                                    />
-                                    <Ionicons name="mic-outline" size={18} color="#9CA3AF" style={{ marginLeft: 8 }} />
-                                </View>
-                            }
-                        />
-                    ),
+                    headerShown: false,
                     tabBarIcon: ({ focused }) => (
                         <Search width={24} height={24} fill={focused ? '#2678FF' : '#6B7280'} />
                     ),
@@ -145,12 +104,7 @@ const _layout = () => {
                 name="profile"
                 options={{
                     title: 'Profile',
-                    headerShown: true,
-                    header: () => (
-                        <CustomHeader
-                            centerContent={<Text className="text-[20px] font-medium text-dark-100">Profile</Text>}
-                        />
-                    ),
+                    headerShown: false,
                     tabBarIcon: ({ focused }) => (
                         <Profile width={24} height={24} fill={focused ? '#2678FF' : '#6B7280'} />
                     ),

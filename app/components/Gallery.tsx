@@ -1,22 +1,29 @@
+import Chatbot from '@/assets/icons/chatbot.svg';
+import Logo from '@/assets/icons/logo.svg';
 import { useGalleryMonitor } from '@/hooks/useGalleryMonitor';
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 import { PhotoGroup } from '@/types/photoGroup';
 import { groupPhotosByMonth } from '@/utils/groupPhotosByMonth';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     FlatList,
     Image,
+    SafeAreaView,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
 import CreateAlbumModal from './CreateAlbumModal';
+import CustomHeader from './CustomHeader';
 import FloatingActionButton from './FloatingButon';
 
 export default function GalleryScreen() {
+    const router = useRouter();
+    const params = useLocalSearchParams();
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
     const [showAlbumModal, setShowAlbumModal] = useState(false);
@@ -38,6 +45,15 @@ export default function GalleryScreen() {
     });
 
     const photosByMonth = useMemo(() => groupPhotosByMonth(photos), [photos]);
+
+    // Handle navigation mode
+    useEffect(() => {
+        if (params.mode === 'create-album') {
+            setIsSelecting(true);
+            // Clear the mode from URL after handling
+            router.setParams({});
+        }
+    }, [params.mode]);
 
     const togglePhotoSelection = (id: string) => {
         setSelectedPhotos((prev) =>
@@ -176,7 +192,42 @@ export default function GalleryScreen() {
     }
 
     return (
-        <View className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50">
+            <CustomHeader
+                rightIcon={
+                    isSelecting ? (
+                        <TouchableOpacity onPress={clearSelection} className='-mr-2'>
+                            <MaterialIcons name="close" size={24} color="#6B7280" />
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity className='mr-2' onPress={() => router.push('/(tabs)/(modals)/chatbot')}>
+                            <Chatbot />
+                        </TouchableOpacity>
+                    )
+                }
+                centerContent={
+                    isSelecting ? (
+                        <TouchableOpacity
+                            onPress={createAlbum}
+                            className="bg-primary px-3 py-3 rounded-xl self-start flex items-center justify-center"
+                        >
+                            <Text className="text-white">Create Album</Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <Logo />
+                    )
+                }
+                leftIcon={
+                    isSelecting && (
+                        <View className="flex-row items-center">
+                            <Text className="text-lg font-semibold mr-1">Selected Photos</Text>
+                            <Text className="text-base text-light-100 mr-12">({selectedPhotos.length})</Text>
+                        </View>
+
+                    )
+                }
+            />
+
             {/* Album Creation Modal */}
             <CreateAlbumModal
                 visible={showAlbumModal}
@@ -189,17 +240,6 @@ export default function GalleryScreen() {
                 togglePhotoSelection={togglePhotoSelection}
                 creatingAlbum={creatingAlbum}
             />
-            {isSelecting && (
-                <View className="p-2 bg-white border-b border-gray-200 flex-row justify-between items-center">
-                    <Text className="text-base font-semibold">Selected: {selectedPhotos.length}</Text>
-                    <TouchableOpacity onPress={clearSelection} className="bg-red-500 px-4 py-1.5 rounded">
-                        <Text className="text-white">Clear Selection</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={createAlbum} className="bg-primary px-4 py-1.5 rounded">
-                        <Text className="text-white">Create Album</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
 
             {photosByMonth.length === 0 ? (
                 <Text className="text-base text-center mt-5">No photos found</Text>
@@ -232,6 +272,6 @@ export default function GalleryScreen() {
                     setIsSelecting(true);
                 }}
             />
-        </View>
+        </SafeAreaView>
     );
 }

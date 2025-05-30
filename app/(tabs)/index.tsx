@@ -8,7 +8,7 @@ import {
 import { useRouter } from 'expo-router'
 import React from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
-import GalleryScreen from '../components/Gallery'
+import GalleryScreen from '../components/GalleryScreen'
 
 const Index = () => {
     const [fontsLoaded] = useFonts({

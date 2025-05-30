@@ -23,6 +23,7 @@ import { downloadPhoto, fetchServerPhotos, groupPhotosByMonth, PhotoGroup, Serve
 import CreateAlbumModal from './CreateAlbumModal';
 import CustomHeader from './CustomHeader';
 import FloatingActionButton from './FloatingButon';
+import FullScreenPhotoView from './FullScreenPhotoView';
 
 export default function GalleryScreen() {
     const router = useRouter();
@@ -37,6 +38,7 @@ export default function GalleryScreen() {
     const [serverPhotos, setServerPhotos] = useState<ServerPhoto[]>([]);
     const [downloadingPhotos, setDownloadingPhotos] = useState<Set<string>>(new Set());
     const [selectedServerPhoto, setSelectedServerPhoto] = useState<ServerPhoto | null>(null);
+    const [selectedLocalPhoto, setSelectedLocalPhoto] = useState<MediaLibrary.Asset | null>(null);
 
     const {
         permissionStatus,
@@ -211,6 +213,8 @@ export default function GalleryScreen() {
                                             setSelectedServerPhoto(serverPhoto);
                                         } else if (isSelecting && localPhoto) {
                                             togglePhotoSelection(localPhoto.id);
+                                        } else if (localPhoto) {
+                                            setSelectedLocalPhoto(localPhoto);
                                         }
                                     }}
                                     activeOpacity={0.8}
@@ -402,7 +406,7 @@ export default function GalleryScreen() {
                 }}
             />
 
-            {/* Full-size image modal */}
+            {/* Full-size image modal for server photos */}
             <Modal
                 visible={selectedServerPhoto !== null}
                 transparent={true}
@@ -425,6 +429,14 @@ export default function GalleryScreen() {
                     )}
                 </View>
             </Modal>
+
+            {/* Full-screen photo view for local photos */}
+            <FullScreenPhotoView
+                photo={selectedLocalPhoto}
+                visible={selectedLocalPhoto !== null}
+                onClose={() => setSelectedLocalPhoto(null)}
+                onPhotoDeleted={requestPermissionAndLoadPhotos}
+            />
         </SafeAreaView>
     );
 }

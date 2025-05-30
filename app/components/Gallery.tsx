@@ -2,21 +2,24 @@ import Chatbot from '@/assets/icons/chatbot.svg';
 import Logo from '@/assets/icons/logo.svg';
 import { useGalleryMonitor } from '@/hooks/useGalleryMonitor';
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
-import { PhotoGroup } from '@/types/photoGroup';
-import { groupPhotosByMonth } from '@/utils/groupPhotosByMonth';
-import { MaterialIcons } from '@expo/vector-icons';
+import handleUploadPhoto from '@/utils/uploadPhoto';
+import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     FlatList,
     Image,
+    Modal,
     SafeAreaView,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
+import { downloadPhoto, fetchServerPhotos, groupPhotosByMonth, PhotoGroup, ServerPhoto } from '../../utils/serverPhotos';
 import CreateAlbumModal from './CreateAlbumModal';
 import CustomHeader from './CustomHeader';
 import FloatingActionButton from './FloatingButon';
@@ -29,6 +32,11 @@ export default function GalleryScreen() {
     const [showAlbumModal, setShowAlbumModal] = useState(false);
     const [albumName, setAlbumName] = useState('');
     const [creatingAlbum, setCreatingAlbum] = useState(false);
+    const [uploadingPhotos, setUploadingPhotos] = useState<Set<string>>(new Set());
+    const [uploadedPhotos, setUploadedPhotos] = useState<Set<string>>(new Set());
+    const [serverPhotos, setServerPhotos] = useState<ServerPhoto[]>([]);
+    const [downloadingPhotos, setDownloadingPhotos] = useState<Set<string>>(new Set());
+    const [selectedServerPhoto, setSelectedServerPhoto] = useState<ServerPhoto | null>(null);
 
     const {
         permissionStatus,
@@ -44,7 +52,35 @@ export default function GalleryScreen() {
         requestPermissionAndLoadPhotos();
     });
 
-    const photosByMonth = useMemo(() => groupPhotosByMonth(photos), [photos]);
+    // Group photos by month
+    const photosByMonth = useMemo(() => {
+        return groupPhotosByMonth(photos, serverPhotos);
+    }, [photos, serverPhotos]);
+
+    // Load uploaded photos from storage on mount
+    useEffect(() => {
+        const loadUploadedPhotos = async () => {
+            const data = await AsyncStorage.getItem('uploaded_photos');
+            if (data) {
+                setUploadedPhotos(new Set(JSON.parse(data)));
+            }
+        };
+        loadUploadedPhotos();
+    }, []);
+
+    // Fetch server photos
+    useEffect(() => {
+        const loadServerPhotos = async () => {
+            const photos = await fetchServerPhotos();
+            setServerPhotos(photos);
+        };
+        loadServerPhotos();
+    }, [photos]);
+
+    // Compare photos whenever local or server photos change
+    const photoComparison = useMemo(() => {
+        return groupPhotosByMonth(photos, serverPhotos);
+    }, [photos, serverPhotos]);
 
     // Handle navigation mode
     useEffect(() => {
@@ -113,6 +149,30 @@ export default function GalleryScreen() {
         // TODO: Optionally navigate to Collection screen
     };
 
+    const handleDownloadPhoto = async (photo: ServerPhoto) => {
+        try {
+            setDownloadingPhotos(prev => new Set([...prev, photo.id]));
+            const asset = await downloadPhoto(photo);
+
+            if (asset) {
+                Alert.alert('Success', 'Photo downloaded successfully');
+                // Refresh the gallery
+                requestPermissionAndLoadPhotos();
+            } else {
+                Alert.alert('Error', 'Failed to download photo');
+            }
+        } catch (error) {
+            console.error('Error downloading photo:', error);
+            Alert.alert('Error', 'Failed to download photo');
+        } finally {
+            setDownloadingPhotos(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(photo.id);
+                return newSet;
+            });
+        }
+    };
+
     const renderMonthSection = ({ item }: { item: PhotoGroup }) => {
         const photoIds = item.photos.map((photo) => photo.id);
         const allSelected = areAllMonthPhotosSelected(photoIds);
@@ -138,31 +198,101 @@ export default function GalleryScreen() {
                     keyExtractor={(photo) => photo.id}
                     numColumns={3}
                     scrollEnabled={false}
-                    renderItem={({ item: photo }) => (
-                        <View className="w-1/3 aspect-square p-0.5">
-                            <TouchableOpacity
-                                onPress={() => isSelecting && togglePhotoSelection(photo.id)}
-                                activeOpacity={0.8}
-                            >
-                                <Image
-                                    source={{ uri: photo.uri }}
-                                    className={`w-full h-full ${selectedPhotos.includes(photo.id) ? 'opacity-50' : ''
-                                        }`}
-                                />
-                                {isSelecting && (
-                                    <View className="absolute top-1 right-1 rounded-md p-1">
-                                        {isPhotoSelected(photo.id) ? (
-                                            <View className="w-6 h-6 bg-primary rounded-lg justify-center items-center">
-                                                <MaterialIcons name="check" size={18} color="white" />
+                    renderItem={({ item: photo }) => {
+                        const isServerPhoto = 'thumbnailUrl' in photo;
+                        const serverPhoto = isServerPhoto ? (photo as unknown as ServerPhoto) : null;
+                        const localPhoto = !isServerPhoto ? (photo as MediaLibrary.Asset) : null;
+
+                        return (
+                            <View className="w-1/3 aspect-square p-0.5">
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        if (isServerPhoto && serverPhoto) {
+                                            setSelectedServerPhoto(serverPhoto);
+                                        } else if (isSelecting && localPhoto) {
+                                            togglePhotoSelection(localPhoto.id);
+                                        }
+                                    }}
+                                    activeOpacity={0.8}
+                                >
+                                    <Image
+                                        source={{ uri: isServerPhoto ? serverPhoto?.thumbnailUrl : localPhoto?.uri }}
+                                        className={`w-full h-full ${selectedPhotos.includes(photo.id) ? 'opacity-50' : ''}`}
+                                        resizeMode="cover"
+                                    />
+                                    {!isServerPhoto && localPhoto && (
+                                        uploadedPhotos.has(localPhoto.id) ? (
+                                            <View className="absolute bottom-1 right-1">
+                                                <MaterialCommunityIcons
+                                                    name="check-circle"
+                                                    size={24}
+                                                    color="#2678FF"
+                                                />
                                             </View>
                                         ) : (
-                                            <View className="w-6 h-6 rounded-lg border-2 border-white" />
-                                        )}
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                                            <TouchableOpacity
+                                                className="absolute bottom-1 right-1"
+                                                onPress={async () => {
+                                                    try {
+                                                        const response = await handleUploadPhoto(
+                                                            localPhoto.uri,
+                                                            localPhoto.id,
+                                                            setUploadingPhotos,
+                                                            setUploadedPhotos
+                                                        );
+
+                                                        if (!response.success) {
+                                                            Alert.alert('Error', response.msg || 'Failed to upload photo. Please try again.');
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Error uploading photo:', error);
+                                                        Alert.alert('Error', 'Failed to upload photo. Please check your network connection and try again.');
+                                                    }
+                                                }}
+                                                disabled={uploadingPhotos.has(localPhoto.id)}
+                                            >
+                                                <MaterialCommunityIcons
+                                                    name="progress-upload"
+                                                    size={24}
+                                                    color={
+                                                        uploadedPhotos.has(localPhoto.id)
+                                                            ? "#2678FF"
+                                                            : uploadingPhotos.has(localPhoto.id)
+                                                                ? "#9CA3AF"
+                                                                : "#6B7280"
+                                                    }
+                                                />
+                                            </TouchableOpacity>
+                                        )
+                                    )}
+                                    {isServerPhoto && serverPhoto && (
+                                        <TouchableOpacity
+                                            className="absolute bottom-1 right-1"
+                                            onPress={() => handleDownloadPhoto(serverPhoto)}
+                                            disabled={downloadingPhotos.has(serverPhoto.id)}
+                                        >
+                                            <MaterialCommunityIcons
+                                                name="progress-download"
+                                                size={24}
+                                                color={downloadingPhotos.has(serverPhoto.id) ? "#9CA3AF" : "#6B7280"}
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                    {isSelecting && !isServerPhoto && localPhoto && (
+                                        <View className="absolute top-1 right-1 rounded-md p-1">
+                                            {isPhotoSelected(localPhoto.id) ? (
+                                                <View className="w-6 h-6 bg-primary rounded-lg justify-center items-center">
+                                                    <MaterialIcons name="check" size={18} color="white" />
+                                                </View>
+                                            ) : (
+                                                <View className="w-6 h-6 rounded-lg border-2 border-white" />
+                                            )}
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+                        );
+                    }}
                 />
             </View>
         );
@@ -223,7 +353,6 @@ export default function GalleryScreen() {
                             <Text className="text-lg font-semibold mr-1">Selected Photos</Text>
                             <Text className="text-base text-light-100 mr-12">({selectedPhotos.length})</Text>
                         </View>
-
                     )
                 }
             />
@@ -272,6 +401,30 @@ export default function GalleryScreen() {
                     setIsSelecting(true);
                 }}
             />
+
+            {/* Full-size image modal */}
+            <Modal
+                visible={selectedServerPhoto !== null}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setSelectedServerPhoto(null)}
+            >
+                <View className="flex-1 bg-black bg-opacity-90 justify-center items-center">
+                    <TouchableOpacity
+                        className="absolute top-4 right-4 z-10"
+                        onPress={() => setSelectedServerPhoto(null)}
+                    >
+                        <MaterialIcons name="close" size={28} color="white" />
+                    </TouchableOpacity>
+                    {selectedServerPhoto && (
+                        <Image
+                            source={{ uri: selectedServerPhoto.url }}
+                            className="w-full h-3/4"
+                            resizeMode="contain"
+                        />
+                    )}
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }

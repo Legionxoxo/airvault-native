@@ -1,8 +1,8 @@
 import Plus from '@/assets/icons/plus.svg';
 import { requestMediaLibraryPermission } from '@/utils/permission';
+import handleUploadPhoto from '@/utils/uploadPhoto';
 import { Feather, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
 import { useEffect, useRef, useState } from 'react';
 import {
     Alert,
@@ -13,6 +13,7 @@ import {
     View,
 } from 'react-native';
 
+
 interface FloatingActionButtonProps {
     onUploadSuccess?: () => void;
     onSelectModeToggle?: () => void;
@@ -22,6 +23,9 @@ interface FloatingActionButtonProps {
 const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle, onCreateAlbum }: FloatingActionButtonProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadingPhotos, setUploadingPhotos] = useState<Set<string>>(new Set());
+    const [uploadedPhotos, setUploadedPhotos] = useState<Set<string>>(new Set());
 
     const animation = useRef(new Animated.Value(0)).current;
 
@@ -69,20 +73,46 @@ const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle, onCreateAlb
             });
 
             if (!result.canceled) {
-                const savedAssets = await Promise.all(
-                    result.assets.map((asset) => MediaLibrary.createAssetAsync(asset.uri))
-                );
+                setIsUploading(true);
+                let successCount = 0;
+                let hasError = false;
 
-                Alert.alert('Success', `Saved ${savedAssets.length} photos to your library`);
+                // Upload each selected photo
+                for (const asset of result.assets) {
+                    const photoId = Date.now().toString(); // Generate a unique ID for each photo
+                    try {
+                        const response = await handleUploadPhoto(
+                            asset.uri,
+                            photoId,
+                            setUploadingPhotos,
+                            setUploadedPhotos
+                        );
 
-                if (onUploadSuccess) onUploadSuccess();
+                        if (response?.success) {
+                            successCount++;
+                        } else {
+                            hasError = true;
+                        }
+                    } catch (error) {
+                        console.error('Error uploading photo:', error);
+                        hasError = true;
+                    }
+                }
+
+                if (successCount > 0 && !hasError) {
+                    Alert.alert('Success', `Successfully uploaded ${successCount} photos`);
+                    if (onUploadSuccess) onUploadSuccess();
+                } else {
+                    Alert.alert('Error', 'Failed to upload some or all photos. Please try again.');
+                }
             }
         } catch (error) {
-            console.error('Error picking or saving images:', error);
-            Alert.alert('Error', 'Failed to upload photos');
+            console.error('Error picking or uploading images:', error);
+            Alert.alert('Error', 'Failed to upload photos. Please check your network connection and try again.');
+        } finally {
+            setIsUploading(false);
+            setIsOpen(false);
         }
-
-        setIsOpen(false);
     };
 
     const handleCreateAlbum = () => {
@@ -110,13 +140,16 @@ const FloatingActionButton = ({ onUploadSuccess, onSelectModeToggle, onCreateAlb
                     >
                         <View className="mb-2 flex-row items-center">
                             <View className="bg-white rounded-2xl px-4 py-3 mr-3 w-[110px]">
-                                <Text className="font-medium text-sm text-center">Upload Photos</Text>
+                                <Text className="font-medium text-sm text-center">
+                                    {isUploading ? 'Uploading...' : 'Upload Photos'}
+                                </Text>
                             </View>
                             <TouchableOpacity
                                 className="bg-white size-[48px] rounded-full justify-center items-center shadow-lg"
                                 onPress={handleUploadPhotos}
+                                disabled={isUploading}
                             >
-                                <Feather name="upload" size={24} color="#2678FF" />
+                                <Feather name="upload" size={24} color={isUploading ? "#9CA3AF" : "#2678FF"} />
                             </TouchableOpacity>
                         </View>
 

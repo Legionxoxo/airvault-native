@@ -1,24 +1,25 @@
 import Chatbot from '@/assets/icons/chatbot.svg';
-import Logo from '@/assets/icons/logo.svg';
 import { useGalleryMonitor } from '@/hooks/useGalleryMonitor';
 import { useMediaLibrary } from '@/hooks/useMediaLibrary';
 import handleUploadPhoto from '@/utils/uploadPhoto';
 import { MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     FlatList,
-    Image,
     Modal,
     SafeAreaView,
     Text,
     TouchableOpacity,
-    View
+    View,
+    ViewToken
 } from 'react-native';
+import { updateVisiblePhotos } from '../../utils/photoCache';
 import { downloadPhoto, fetchServerPhotos, groupPhotosByMonth, PhotoGroup, ServerPhoto } from '../../utils/serverPhotos';
 import CreateAlbumModal from './CreateAlbumModal';
 import CustomHeader from './CustomHeader';
@@ -41,6 +42,7 @@ export default function GalleryScreen() {
     const [selectedLocalPhoto, setSelectedLocalPhoto] = useState<MediaLibrary.Asset | null>(null);
     const [selectedPhotoSource, setSelectedPhotoSource] = useState<'cache' | 'server' | 'local'>('local');
     const [photoSource, setPhotoSource] = useState<{ [key: string]: 'cache' | 'server' }>({});
+    const flatListRef = useRef<FlatList>(null);
 
     const {
         permissionStatus,
@@ -192,26 +194,28 @@ export default function GalleryScreen() {
         }
     };
 
+    const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        if (viewableItems.length > 0) {
+            const firstVisibleIndex = viewableItems[0].index || 0;
+            // Only update visible photos for server photos
+            const serverPhotos = photos.filter(photo => 'thumbnailUrl' in photo && 'url' in photo && 'uploadedAt' in photo) as ServerPhoto[];
+            updateVisiblePhotos(serverPhotos, firstVisibleIndex);
+        }
+    }).current;
+
+    const viewabilityConfig = useRef({
+        itemVisiblePercentThreshold: 50
+    }).current;
+
     const renderMonthSection = ({ item }: { item: PhotoGroup }) => {
         const photoIds = item.photos.map((photo) => photo.id);
         const allSelected = areAllMonthPhotosSelected(photoIds);
 
         return (
-            <View className="mb-3">
-                <View className="flex-row justify-between items-center px-2 py-2">
-                    <Text className="text-lg font-bold">{`${item.month} ${item.year}`}</Text>
-                    {isSelecting && (
-                        <TouchableOpacity onPress={() => toggleMonthSelection(photoIds)}>
-                            {allSelected ? (
-                                <View className="w-6 h-6 bg-primary rounded-lg justify-center items-center">
-                                    <MaterialIcons name="check" size={18} color="white" />
-                                </View>
-                            ) : (
-                                <View className="w-6 h-6 border-2 border-gray-400 rounded-lg" />
-                            )}
-                        </TouchableOpacity>
-                    )}
-                </View>
+            <View className="mb-4">
+                <Text className="text-lg font-semibold mb-2 px-2">
+                    {item.month} {item.year}
+                </Text>
                 <FlatList
                     data={item.photos}
                     keyExtractor={(photo) => photo.id}
@@ -241,9 +245,9 @@ export default function GalleryScreen() {
                                     activeOpacity={0.8}
                                 >
                                     <Image
-                                        source={{ uri: isServerPhoto ? serverPhoto?.thumbnailUrl : localPhoto?.uri }}
-                                        className={`w-full h-full ${selectedPhotos.includes(photo.id) ? 'opacity-50' : ''}`}
-                                        resizeMode="cover"
+                                        source={{ uri: isServerPhoto && serverPhoto?.thumbnailUrl ? serverPhoto.thumbnailUrl : localPhoto?.uri || '' }}
+                                        style={{ width: '100%', height: '100%', opacity: selectedPhotos.includes(photo.id) ? 0.5 : 1 }}
+                                        contentFit="cover"
                                     />
                                     {!isServerPhoto && localPhoto && (
                                         uploadedPhotos.has(localPhoto.id) ? (
@@ -276,17 +280,15 @@ export default function GalleryScreen() {
                                                 }}
                                                 disabled={uploadingPhotos.has(localPhoto.id)}
                                             >
-                                                <MaterialCommunityIcons
-                                                    name="progress-upload"
-                                                    size={24}
-                                                    color={
-                                                        uploadedPhotos.has(localPhoto.id)
-                                                            ? "#2678FF"
-                                                            : uploadingPhotos.has(localPhoto.id)
-                                                                ? "#9CA3AF"
-                                                                : "#6B7280"
-                                                    }
-                                                />
+                                                {uploadingPhotos.has(localPhoto.id) ? (
+                                                    <ActivityIndicator size="small" color="#2678FF" />
+                                                ) : (
+                                                    <MaterialCommunityIcons
+                                                        name="progress-upload"
+                                                        size={24}
+                                                        color="black"
+                                                    />
+                                                )}
                                             </TouchableOpacity>
                                         )
                                     )}
@@ -296,10 +298,10 @@ export default function GalleryScreen() {
                                             onPress={() => handleDownloadPhoto(serverPhoto)}
                                             disabled={downloadingPhotos.has(serverPhoto.id)}
                                         >
-                                            <MaterialCommunityIcons
-                                                name="progress-download"
+                                            <MaterialIcons
+                                                name="downloading"
                                                 size={24}
-                                                color={downloadingPhotos.has(serverPhoto.id) ? "#9CA3AF" : "#6B7280"}
+                                                color="black"
                                             />
                                         </TouchableOpacity>
                                     )}
@@ -347,42 +349,16 @@ export default function GalleryScreen() {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-white">
             <CustomHeader
+                centerContent={<Text className="text-lg font-semibold">Gallery</Text>}
                 rightIcon={
-                    isSelecting ? (
-                        <TouchableOpacity onPress={clearSelection} className='-mr-2'>
-                            <MaterialIcons name="close" size={24} color="#6B7280" />
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity className='mr-2' onPress={() => router.push('/(tabs)/(modals)/chatbot')}>
-                            <Chatbot />
-                        </TouchableOpacity>
-                    )
-                }
-                centerContent={
-                    isSelecting ? (
-                        <TouchableOpacity
-                            onPress={createAlbum}
-                            className="bg-primary px-3 py-3 rounded-xl self-start flex items-center justify-center"
-                        >
-                            <Text className="text-white">Create Album</Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <Logo />
-                    )
-                }
-                leftIcon={
-                    isSelecting && (
-                        <View className="flex-row items-center">
-                            <Text className="text-lg font-semibold mr-1">Selected Photos</Text>
-                            <Text className="text-base text-light-100 mr-12">({selectedPhotos.length})</Text>
-                        </View>
-                    )
+                    <TouchableOpacity onPress={() => router.push('/(tabs)/(modals)/chatbot')}>
+                        <Chatbot width={24} height={24} />
+                    </TouchableOpacity>
                 }
             />
 
-            {/* Album Creation Modal */}
             <CreateAlbumModal
                 visible={showAlbumModal}
                 onClose={() => setShowAlbumModal(false)}
@@ -399,9 +375,12 @@ export default function GalleryScreen() {
                 <Text className="text-base text-center mt-5">No photos found</Text>
             ) : (
                 <FlatList
+                    ref={flatListRef}
                     data={photosByMonth}
                     keyExtractor={(item) => `${item.month}-${item.year}`}
                     renderItem={renderMonthSection}
+                    onViewableItemsChanged={onViewableItemsChanged}
+                    viewabilityConfig={viewabilityConfig}
                     onEndReached={() => {
                         if (photos.length > 0) {
                             const lastPhoto = photos[photos.length - 1];
@@ -444,8 +423,8 @@ export default function GalleryScreen() {
                     {selectedServerPhoto && (
                         <Image
                             source={{ uri: selectedServerPhoto.url }}
-                            className="w-full h-3/4"
-                            resizeMode="contain"
+                            style={{ width: '100%', height: '75%' }}
+                            contentFit="contain"
                         />
                     )}
                 </View>

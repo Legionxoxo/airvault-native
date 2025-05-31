@@ -1,10 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library';
 import React from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Image,
     Modal,
     Text,
     TouchableOpacity,
@@ -109,8 +109,8 @@ export default function FullScreenPhotoView({
                         <View className="w-full h-3/4">
                             <Image
                                 source={{ uri: getImageUri() }}
-                                className="w-full h-full"
-                                resizeMode="contain"
+                                style={{ width: '100%', height: '100%' }}
+                                contentFit="contain"
                                 onLoadStart={() => setIsLoading(true)}
                                 onLoadEnd={() => setIsLoading(false)}
                             />
@@ -124,7 +124,7 @@ export default function FullScreenPhotoView({
                 </View>
 
                 {/* Bottom options */}
-                <View className="flex-row justify-around items-center p-6 bg-black bg-opacity-50">
+                <View className="flex-row justify-around items-center py-4">
                     {isLocalPhoto(photo) && (
                         <TouchableOpacity
                             className="items-center"

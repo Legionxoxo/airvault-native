@@ -39,6 +39,8 @@ export default function GalleryScreen() {
     const [downloadingPhotos, setDownloadingPhotos] = useState<Set<string>>(new Set());
     const [selectedServerPhoto, setSelectedServerPhoto] = useState<ServerPhoto | null>(null);
     const [selectedLocalPhoto, setSelectedLocalPhoto] = useState<MediaLibrary.Asset | null>(null);
+    const [selectedPhotoSource, setSelectedPhotoSource] = useState<'cache' | 'server' | 'local'>('local');
+    const [photoSource, setPhotoSource] = useState<{ [key: string]: 'cache' | 'server' }>({});
 
     const {
         permissionStatus,
@@ -75,6 +77,21 @@ export default function GalleryScreen() {
         const loadServerPhotos = async () => {
             const photos = await fetchServerPhotos();
             setServerPhotos(photos);
+
+            // Check if photos came from cache
+            const cachedPhotos = await AsyncStorage.getItem('server_photos_cache');
+            if (cachedPhotos) {
+                const { timestamp, photos: cachedPhotosList } = JSON.parse(cachedPhotos);
+                const now = Date.now();
+                const isFromCache = now - timestamp < 2 * 24 * 60 * 60 * 1000; // 2 days
+
+                // Create a map of photo sources
+                const sourceMap: { [key: string]: 'cache' | 'server' } = {};
+                photos.forEach(photo => {
+                    sourceMap[photo.id] = isFromCache ? 'cache' : 'server';
+                });
+                setPhotoSource(sourceMap);
+            }
         };
         loadServerPhotos();
     }, [photos]);
@@ -211,10 +228,14 @@ export default function GalleryScreen() {
                                     onPress={() => {
                                         if (isServerPhoto && serverPhoto) {
                                             setSelectedServerPhoto(serverPhoto);
+                                            setSelectedPhotoSource(photoSource[serverPhoto.id] || 'server');
+                                            console.log(`Opening server photo ${serverPhoto.id} from ${photoSource[serverPhoto.id] || 'unknown'} source`);
                                         } else if (isSelecting && localPhoto) {
                                             togglePhotoSelection(localPhoto.id);
                                         } else if (localPhoto) {
                                             setSelectedLocalPhoto(localPhoto);
+                                            setSelectedPhotoSource('local');
+                                            console.log('Opening local photo from device');
                                         }
                                     }}
                                     activeOpacity={0.8}
@@ -432,10 +453,14 @@ export default function GalleryScreen() {
 
             {/* Full-screen photo view for local photos */}
             <FullScreenPhotoView
-                photo={selectedLocalPhoto}
-                visible={selectedLocalPhoto !== null}
-                onClose={() => setSelectedLocalPhoto(null)}
+                photo={selectedLocalPhoto || selectedServerPhoto}
+                visible={selectedLocalPhoto !== null || selectedServerPhoto !== null}
+                onClose={() => {
+                    setSelectedLocalPhoto(null);
+                    setSelectedServerPhoto(null);
+                }}
                 onPhotoDeleted={requestPermissionAndLoadPhotos}
+                source={selectedPhotoSource}
             />
         </SafeAreaView>
     );

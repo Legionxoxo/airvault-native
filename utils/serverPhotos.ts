@@ -1,6 +1,7 @@
 import * as FileSystem from "expo-file-system";
 import * as MediaLibrary from "expo-media-library";
 import { API_BASE_URL } from "../config/env";
+import { getCachedPhotos, setCachedPhotos } from "./photoCache";
 
 export interface ServerPhoto {
     id: string;
@@ -21,6 +22,13 @@ export const fetchServerPhotos = async (
     folder_id?: string
 ): Promise<ServerPhoto[]> => {
     try {
+        // Try to get photos from cache first
+        const cachedPhotos = await getCachedPhotos();
+        if (cachedPhotos) {
+            return cachedPhotos;
+        }
+
+        // If no cache or cache expired, fetch from server
         const response = await fetch(`${API_BASE_URL}/photos/list`, {
             method: "POST",
             headers: {
@@ -31,14 +39,18 @@ export const fetchServerPhotos = async (
 
         const data = await response.json();
         if (data.success) {
-            return data.photos.map((photo: any) => ({
+            const photos = data.photos.map((photo: any) => ({
                 id: photo.id,
                 url: photo.photo_url,
                 thumbnailUrl: photo.thumbnail_url,
                 filename: photo.filename,
                 uploadedAt: photo.uploaded_at,
-                captureDate: photo.capture_date || photo.uploaded_at, // Fallback to upload date if capture date not available
+                captureDate: photo.capture_date || photo.uploaded_at,
             }));
+
+            // Cache the fetched photos
+            await setCachedPhotos(photos);
+            return photos;
         }
         return [];
     } catch (error) {
